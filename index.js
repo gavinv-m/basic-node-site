@@ -1,30 +1,30 @@
-import http from 'node:http';
-import fs from 'node:fs/promises';
-import url from 'node:url';
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const page404 = await fs.readFile('404.html', 'utf-8');
+const app = express();
+const PORT = 3000;
 
-const server = http.createServer(async (req, res) => {
-  const parsedURL = url.parse(req.url, true);
-  const fileName =
-    parsedURL.pathname === '/'
-      ? './index.html'
-      : '.' + parsedURL.pathname + '.html';
+// For ES modules
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
 
-  try {
-    const data = await fs.readFile(fileName, { encoding: 'utf8' });
-    res.writeHead(200, {
-      'Content-Type': 'text/html',
-    });
-    res.write(data);
-    return res.end();
-  } catch (error) {
-    res.writeHead(404, {
-      'Content-Type': 'text/html',
-    });
-    res.write(page404);
-    return res.end('404 Not Found');
-  }
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, './index.html'));
 });
 
-server.listen(8080);
+app.get('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, './about.html'));
+});
+
+app.get('/contact-me', (req, res) => {
+  res.sendFile(path.join(__dirname, './contact-me.html'));
+});
+
+//For unmatched routes, has to be at the bottom of thr file
+app.use((req, res) => {
+  console.log('Middleware called');
+  res.status(404).sendFile(path.join(__dirname, './404.html'));
+});
+
+app.listen(PORT);
